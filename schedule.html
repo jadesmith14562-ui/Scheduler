@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ConvoSpace - Meeting Scheduler</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+ <script src="/dashboard/meeting/js/meetingScheduler.js" defer></script>
+<link rel="stylesheet" href="/dashboard/meeting/css/meetingScheduler.css">
+
+    
+    <!-- Additional CSS for Profile Section -->
+    <style>
+        /* Profile Section Styles */
+        .profile-section {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+
+        .profile-container {
+            position: relative;
+            display: inline-block;
+        }
+
+        .profile-trigger {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 12px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            color: white;
+            text-decoration: none;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .profile-trigger:hover {
+            background: rgba(255, 255, 255, 0.15);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+            color: white;
+            text-decoration: none;
+        }
+
+        .profile-picture {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .profile-picture:hover {
+            border-color: rgba(255, 255, 255, 0.6);
+            transform: scale(1.1);
+        }
+
+        .profile-info {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            min-width: 0;
+        }
+
+        .profile-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: #ffffff;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 150px;
+            margin: 0;
+        }
+
+        .profile-email {
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.8);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 150px;
+            margin: 0;
+        }
+
+        .profile-chevron {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.7);
+            transition: transform 0.3s ease;
+        }
+
+        .profile-trigger:hover .profile-chevron {
+            transform: rotate(180deg);
+        }
+
+        /* Profile Dropdown */
+        .profile-dropdown {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            margin-top: 8px;
+            min-width: 200px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow: hidden;
+        }
+
+        .profile-dropdown.open {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .dropdown-header {
+            padding: 16px;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .dropdown-user-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .dropdown-profile-picture {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .dropdown-user-details h4 {
+            margin: 0 0 2px 0;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .dropdown-user-details p {
+            margin: 0;
+            font-size: 12px;
+            opacity: 0.9;
+        }
+
+        .dropdown-menu {
+            padding: 8px 0;
+        }
+
+        .dropdown-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            color: #374151;
+            text-decoration: none;
+            transition: all 0.2s ease;
+            font-size: 14px;
+            border: none;
+            background: none;
+            width: 100%;
+            text-align: left;
+            cursor: pointer;
+        }
+
+        .dropdown-item:hover {
+            background: rgba(99, 102, 241, 0.1);
+            color: #4f46e5;
+            text-decoration: none;
+        }
+
+        .dropdown-item i {
+            width: 16px;
+            text-align: center;
+            font-size: 14px;
+        }
+
+        .dropdown-divider {
+            height: 1px;
+            background: rgba(0, 0, 0, 0.1);
+            margin: 8px 0;
+        }
+
+        .logout-item {
+            color: #dc2626 !important;
+        }
+
+        .logout-item:hover {
+            background: rgba(220, 38, 38, 0.1) !important;
+            color: #dc2626 !important;
+        }
+
+        /* Loading states */
+        .profile-trigger.loading {
+            pointer-events: none;
+            opacity: 0.7;
+        }
+
+        .profile-loading {
+            display: inline-block;
+            width: 32px;
+            height: 32px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: #ffffff;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .profile-section {
+                top: 15px;
+                right: 15px;
+            }
+            
+            .profile-info {
+                display: none;
+            }
+            
+            .profile-dropdown {
+                min-width: 250px;
+                right: -20px;
+            }
+        }
+
+        /* Hide scheduler email field since we're auto-filling it */
+        .scheduler-email-group {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <!-- Success Popup -->
+    <div id="successPopup" class="success-popup hidden">
+        <div class="success-card glass-card">
+            <div class="success-content">
+                <i class="fas fa-check-circle success-icon"></i>
+                <h3>Meeting Scheduled!</h3>
+                <p>Your video call has been successfully scheduled and email notifications have been sent.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast hidden">
+        <div class="toast-content">
+            <span id="toastMessage"></span>
+        </div>
+    </div>
+
+    <!-- Profile Section -->
+    <div class="profile-section">
+        <div class="profile-container">
+            <div id="profileTrigger" class="profile-trigger">
+                <div class="profile-loading" id="profileLoading"></div>
+                <div id="profileContent" class="profile-content" style="display: none;">
+                    <img id="profilePicture" class="profile-picture" src="" alt="Profile">
+                    <div class="profile-info">
+                        <div class="profile-name" id="profileName"></div>
+                        <div class="profile-email" id="profileEmail"></div>
+                    </div>
+                    <i class="fas fa-chevron-down profile-chevron"></i>
+                </div>
+            </div>
+            
+            <div id="profileDropdown" class="profile-dropdown">
+                <div class="dropdown-header">
+                    <div class="dropdown-user-info">
+                        <img id="dropdownProfilePicture" class="dropdown-profile-picture" src="" alt="Profile">
+                        <div class="dropdown-user-details">
+                            <h4 id="dropdownUserName"></h4>
+                            <p id="dropdownUserEmail"></p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="dropdown-menu">
+                    <a href="/dashboard" class="dropdown-item">
+                        <i class="fas fa-tachometer-alt"></i>
+                        <span>Dashboard</span>
+                    </a>
+                    <a href="/profile" class="dropdown-item">
+                        <i class="fas fa-user-cog"></i>
+                        <span>Account Settings</span>
+                    </a>
+                    <div class="dropdown-divider"></div>
+                    <button class="dropdown-item logout-item" onclick="handleLogout()">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span>Sign Out</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Background Pattern -->
+        <div class="floating-particles"></div>
+        
+        <div class="content">
+            <!-- Header -->
+            <div class="header fade-in">
+                <div class="header-icon">
+                    <div class="icon-wrapper">
+                        <i class="fas fa-video video-icon"></i>
+                    </div>
+                    <h1>ConvoSpace</h1>
+                </div>
+                <p class="subtitle">Schedule your next video conference with ease</p>
+            </div>
+
+            <div class="main-grid">
+                <!-- Main Scheduling Form -->
+                <div class="form-section">
+                    <div class="card glass-card slide-up">
+                        <div class="card-header">
+                            <h2 class="card-title">
+                                <i class="fas fa-calendar-alt calendar-icon"></i>
+                                Schedule New Meeting
+                            </h2>
+                            <p class="card-description">Fill in the details for your video conference</p>
+                        </div>
+                        
+                        <div class="card-content">
+                            <form id="meetingForm">
+                                <!-- Meeting Title -->
+                                <div class="form-group">
+                                    <label for="meetingTitle">Meeting Title *</label>
+                                    <input 
+                                        type="text" 
+                                        id="meetingTitle" 
+                                        placeholder="Enter meeting title..."
+                                        class="input"
+                                        required
+                                    >
+                                </div>
+
+                                <!-- Date and Time -->
+                                <div class="grid-2">
+                                    <div class="form-group">
+                                        <label for="meetingDate">Date *</label>
+                                       <input style="text-transform: uppercase;"
+                                            type="text" 
+                                            id="meetingDate" 
+                                            class="input uppercase" 
+                                            placeholder="MM/DD/YYYY"
+                                            onfocus="(this.type='date')" 
+                                            onblur="if(this.value===''){this.type='text'}"
+                                            required
+                                        >
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label for="meetingTime">Time *</label>
+                                        <div class="time-input-container">
+                                            <i class="fas fa-clock"></i>
+                                            <input 
+                                                type="text" 
+                                                id="meetingTimeHours" 
+                                                class="time-input"
+                                                placeholder="HH"
+                                                maxlength="2"
+                                                pattern="[0-2][0-9]"
+                                                title="Enter hours (00-23)"
+                                            >
+                                            <span class="time-separator">:</span>
+                                            <input 
+                                                type="text" 
+                                                id="meetingTimeMinutes" 
+                                                class="time-input"
+                                                placeholder="MM"
+                                                maxlength="2"
+                                                pattern="[0-5][0-9]"
+                                                title="Enter minutes (00-59)"
+                                            >
+                                        </div>
+                                        <input type="hidden" id="meetingTime" required>
+                                    </div>
+                                </div>
+
+                                <!-- Duration -->
+                                <div class="form-group">
+                                    <label for="duration">Duration *</label>
+                                    <div class="custom-dropdown" id="durationDropdown">
+                                        <div class="dropdown-trigger" data-placeholder="Select duration">
+                                            <span class="selected-text">Select duration</span>
+                                            <i class="fas fa-chevron-down dropdown-chevron"></i>
+                                        </div>
+                                        <div class="dropdown-content" id="durationDropdownContent">
+                                            <div class="dropdown-option" data-value="15">
+                                                <i class="fas fa-clock"></i>
+                                                <span>15 minutes</span>
+                                            </div>
+                                            <div class="dropdown-option" data-value="30">
+                                                <i class="fas fa-clock"></i>
+                                                <span>30 minutes</span>
+                                            </div>
+                                            <div class="dropdown-option" data-value="45">
+                                                <i class="fas fa-clock"></i>
+                                                <span>45 minutes</span>
+                                            </div>
+                                            <div class="dropdown-option" data-value="60">
+                                                <i class="fas fa-clock"></i>
+                                                <span>1 hour</span>
+                                            </div>
+                                            <div class="dropdown-option" data-value="90">
+                                                <i class="fas fa-clock"></i>
+                                                <span>1.5 hours</span>
+                                            </div>
+                                            <div class="dropdown-option" data-value="120">
+                                                <i class="fas fa-clock"></i>
+                                                <span>2 hours</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <input type="hidden" id="duration" required>
+                                </div>
+
+                                <!-- Hidden Scheduler Email (auto-filled from user data) -->
+                                <div class="form-group scheduler-email-group">
+                                    <label class="participants-label">
+                                        <i class="fas fa-user user-icon"></i>
+                                        Your Email *
+                                    </label>
+                                    <input 
+                                        type="email" 
+                                        id="schedulerEmail" 
+                                        placeholder="Enter your email address..."
+                                        class="input"
+                                        required
+                                        readonly
+                                    >
+                                </div>
+
+                                <!-- Participants -->
+                                <div class="form-group">
+                                    <label class="participants-label">
+                                        <i class="fas fa-users users-icon"></i>
+                                        Participants
+                                    </label>
+                                    
+                                    <div class="participant-input">
+                                        <input 
+                                            type="email" 
+                                            id="participantEmail" 
+                                            placeholder="Enter participant email address..."
+                                            class="input"
+                                        >
+                                        <button type="button" id="addParticipant" class="btn-add">
+                                            <i class="fas fa-plus"></i>
+                                        </button>
+                                    </div>
+                                    
+                                    <div id="participantsList" class="participants-list hidden"></div>
+                                </div>
+
+                                <!-- Description -->
+                                <div class="form-group">
+                                    <label for="description">Description</label>
+                                    <textarea 
+                                        id="description" 
+                                        placeholder="Add meeting agenda or description..."
+                                        class="textarea"
+                                        rows="4"
+                                    ></textarea>
+                                </div>
+
+                                <!-- Schedule Button -->
+                                <button type="submit" class="btn-primary" id="scheduleBtn">
+                                    <i class="fas fa-paper-plane send-icon"></i>
+                                    Schedule Meeting
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Preview Sidebar -->
+                <div class="sidebar">
+                    <div class="card glass-card slide-up preview-card">
+                        <div class="card-header">
+                            <h3>Meeting Preview</h3>
+                        </div>
+                        <div class="card-content">
+                            <div class="preview-content">
+                                <h4 id="previewTitle">Untitled Meeting</h4>
+                                <div class="preview-item">
+                                    <i class="fas fa-calendar-alt calendar-icon"></i>
+                                    <span id="previewDate">No date selected</span>
+                                </div>
+                                <div class="preview-item">
+                                    <i class="fas fa-clock clock-icon"></i>
+                                    <span id="previewTime">No time selected</span>
+                                </div>
+                                <div class="preview-item">
+                                    <i class="fas fa-users users-icon"></i>
+                                    <span id="previewParticipants">0 participants</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card glass-card slide-up tips-card">
+                        <div class="card-content">
+                            <h4>Quick Tips</h4>
+                            <ul class="tips-list">
+                                <li>• Schedule meetings at least 15 minutes in advance</li>
+                                <li>• Add participants via email to send invitations</li>
+                                <li>• Include an agenda in the description</li>
+                                <li>• You'll receive email reminders 5 minutes before and at meeting start</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Profile Management JavaScript -->
+    <script>
+        // Profile Management Class
+        class ProfileManager {
+            constructor() {
+                this.user = null;
+                this.isProfileOpen = false;
+                this.initializeElements();
+                this.setupEventListeners();
+                this.loadUserData();
+            }
+
+            initializeElements() {
+                this.profileTrigger = document.getElementById('profileTrigger');
+                this.profileLoading = document.getElementById('profileLoading');
+                this.profileContent = document.getElementById('profileContent');
+                this.profileDropdown = document.getElementById('profileDropdown');
+                this.profilePicture = document.getElementById('profilePicture');
+                this.profileName = document.getElementById('profileName');
+                this.profileEmail = document.getElementById('profileEmail');
+                this.dropdownProfilePicture = document.getElementById('dropdownProfilePicture');
+                this.dropdownUserName = document.getElementById('dropdownUserName');
+                this.dropdownUserEmail = document.getElementById('dropdownUserEmail');
+                this.schedulerEmailInput = document.getElementById('schedulerEmail');
+            }
+
+            setupEventListeners() {
+                // Profile trigger click
+                this.profileTrigger.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    if (!this.profileTrigger.classList.contains('loading')) {
+                        this.toggleProfileDropdown();
+                    }
+                });
+
+                // Close dropdown when clicking outside
+                document.addEventListener('click', (e) => {
+                    if (!this.profileTrigger.contains(e.target) && !this.profileDropdown.contains(e.target)) {
+                        this.closeProfileDropdown();
+                    }
+                });
+
+                // Keyboard navigation
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape') {
+                        this.closeProfileDropdown();
+                    }
+                });
+            }
+
+            async loadUserData() {
+                try {
+                    console.log('🔄 Loading user data...');
+                    
+                    const response = await fetch('/api/user', {
+                        method: 'GET',
+                        credentials: 'include',
+                        headers: {
+                            'Accept': 'application/json'
+                        }
+                    });
+
+                    if (!response.ok) {
+                        if (response.status === 401) {
+                            // User not authenticated, redirect to login
+                            console.log('❌ User not authenticated, redirecting to login...');
+                            window.location.href = '/login';
+                            return;
+                        }
+                        throw new Error(`HTTP ${response.status}`);
+                    }
+
+                    const data = await response.json();
+                    console.log('✅ User data loaded:', data.user);
+                    
+                    this.user = data.user;
+                    this.updateProfileUI();
+                    this.populateSchedulerEmail();
+
+                } catch (error) {
+                    console.error('❌ Error loading user data:', error);
+                    this.showProfileError();
+                }
+            }
+
+            updateProfileUI() {
+                if (!this.user) return;
+
+                // Hide loading, show content
+                this.profileLoading.style.display = 'none';
+                this.profileContent.style.display = 'flex';
+
+                // Get profile picture URL
+                const profilePictureUrl = this.getProfilePictureUrl();
+
+                // Update main profile trigger
+                this.profilePicture.src = profilePictureUrl;
+                this.profilePicture.alt = this.user.name;
+                this.profileName.textContent = this.user.name;
+                this.profileEmail.textContent = this.user.email;
+
+                // Update dropdown
+                this.dropdownProfilePicture.src = profilePictureUrl;
+                this.dropdownProfilePicture.alt = this.user.name;
+                this.dropdownUserName.textContent = this.user.name;
+                this.dropdownUserEmail.textContent = this.user.email;
+
+                console.log('✅ Profile UI updated successfully');
+            }
+
+            getProfilePictureUrl() {
+                // If user has a profile picture (from Google OAuth)
+                if (this.user.profilePicture) {
+                    return this.user.profilePicture;
+                }
+
+                // Fallback to a nice gradient avatar with initials
+                const initials = this.user.name
+                    .split(' ')
+                    .map(part => part.charAt(0).toUpperCase())
+                    .join('')
+                    .substring(0, 2);
+
+                // Create a data URL for the avatar
+                const canvas = document.createElement('canvas');
+                canvas.width = 64;
+                canvas.height = 64;
+                const ctx = canvas.getContext('2d');
+
+                // Create gradient background
+                const gradient = ctx.createLinearGradient(0, 0, 64, 64);
+                gradient.addColorStop(0, '#667eea');
+                gradient.addColorStop(1, '#764ba2');
+                
+                ctx.fillStyle = gradient;
+                ctx.fillRect(0, 0, 64, 64);
+
+                // Add initials
+                ctx.fillStyle = '#ffffff';
+                ctx.font = 'bold 24px Inter, sans-serif';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(initials, 32, 32);
+
+                return canvas.toDataURL();
+            }
+
+            populateSchedulerEmail() {
+                if (this.user && this.schedulerEmailInput) {
+                    this.schedulerEmailInput.value = this.user.email;
+                    console.log('✅ Scheduler email auto-filled:', this.user.email);
+                }
+            }
+
+            showProfileError() {
+                this.profileLoading.style.display = 'none';
+                this.profileContent.style.display = 'flex';
+                
+                this.profilePicture.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMiAzMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMTYiIGN5PSIxNiIgcj0iMTYiIGZpbGw9IiNkYzI2MjYiLz4KPHN2ZyB3aWR0aD0iMTYiIGhlaWdodD0iMTYiIHZpZXdCb3g9IjAgMCAxNiAxNiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4PSI4IiB5PSI4Ij4KPHBhdGggZD0iTTggMTJWOCIgc3Ryb2tlPSJ3aGl0ZSIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiLz4KPHBhdGggZD0iTTggNkg4LjAwOCIgc3Ryb2tlPSJ3aGl0ZSIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiLz4KPC9zdmc+Cjwvc3ZnPgo=';
+                this.profileName.textContent = 'Error Loading';
+                this.profileEmail.textContent = 'Please refresh';
+            }
+
+            toggleProfileDropdown() {
+                if (this.isProfileOpen) {
+                    this.closeProfileDropdown();
+                } else {
+                    this.openProfileDropdown();
+                }
+            }
+
+            openProfileDropdown() {
+                this.profileDropdown.classList.add('open');
+                this.isProfileOpen = true;
+            }
+
+            closeProfileDropdown() {
+                this.profileDropdown.classList.remove('open');
+                this.isProfileOpen = false;
+            }
+
+            // Get user data for other components
+            getUserData() {
+                return this.user;
+            }
+
+            // Refresh user data
+            async refreshUserData() {
+                await this.loadUserData();
+            }
+        }
+
+        // Logout function
+        async function handleLogout() {
+            try {
+                console.log('🔄 Logging out user...');
+                
+                const response = await fetch('/api/logout', {
+                    method: 'POST',
+                    credentials: 'include',
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
+
+                if (response.ok) {
+                    console.log('✅ Logout successful');
+                    // Redirect to login page
+                    window.location.href = '/login';
+                } else {
+                    console.error('❌ Logout failed:', response.status);
+                    // Still redirect on failure
+                    window.location.href = '/login';
+                }
+            } catch (error) {
+                console.error('❌ Logout error:', error);
+                // Redirect anyway
+                window.location.href = '/login';
+            }
+        }
+
+        // Initialize profile manager when DOM is ready
+        let profileManager;
+        document.addEventListener('DOMContentLoaded', () => {
+            profileManager = new ProfileManager();
+            
+            // Make profile manager available globally for debugging
+            window.profileManager = profileManager;
+            
+            console.log('🚀 Profile Manager initialized');
+        });
+
+        // Update the existing MeetingScheduler to use the auto-filled email
+        if (typeof MeetingScheduler !== 'undefined') {
+            const originalConstructor = MeetingScheduler;
+            MeetingScheduler = function(...args) {
+                const instance = originalConstructor.apply(this, args);
+                
+                // Wait for profile to load, then update scheduler email
+                const checkProfileData = () => {
+                    if (window.profileManager && window.profileManager.user) {
+                        this.schedulerEmail.value = window.profileManager.user.email;
+                        console.log('✅ Auto-filled scheduler email from profile');
+                    } else {
+                        setTimeout(checkProfileData, 100);
+                    }
+                };
+                
+                setTimeout(checkProfileData, 100);
+                return instance;
+            };
+            
+            // Copy prototype
+            MeetingScheduler.prototype = originalConstructor.prototype;
+        }
+    </script>
+
+</body>
