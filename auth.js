@@ -14,6 +14,28 @@ import crypto from 'crypto';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
+// Meeting Schema
+const meetingSchema = new mongoose.Schema({
+  title: { type: String, required: true },
+  description: { type: String },
+  dateTime: { type: Date, required: true },
+  duration: { type: Number, required: true }, // in minutes
+  schedulerId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  schedulerEmail: { type: String, required: true },
+  participants: [{
+    email: { type: String, required: true },
+    name: { type: String },
+    profilePicture: { type: String },
+    status: { type: String, enum: ['pending', 'accepted', 'declined'], default: 'pending' }
+  }],
+  status: { type: String, enum: ['scheduled', 'ongoing', 'completed', 'cancelled'], default: 'scheduled' },
+  meetingLink: { type: String }, // For future video call integration
+  createdAt: { type: Date, default: Date.now },
+  updatedAt: { type: Date, default: Date.now }
+});
+
+const Meeting = mongoose.model('Meeting', meetingSchema);
+
 // User Schema - Updated to support Google OAuth and email verification
 const userSchema = new mongoose.Schema({
   firstName: { type: String, required: true },
@@ -845,11 +867,87 @@ app.get('/dashboard', authenticateUser, (req, res) => {
       res.status(500).json({ error: 'Failed to get user data' });
     }
   });
+
+  // Get user meetings
+  app.get('/api/meetings', authenticateUser, async (req, res) => {
+    try {
+      let userId;
+      if (req.session.userId) {
+        userId = req.session.userId;
+      } else if (req.user) {
+        userId = req.user._id;
+      }
+
+      const user = await User.findById(userId);
+      if (!user) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+
+      // Find meetings where user is scheduler or participant
+      const now = new Date();
+      const meetings = await Meeting.find({
+        $and: [
+          {
+            $or: [
+              { schedulerId: userId },
+              { 'participants.email': user.email }
+            ]
+          },
+          {
+            dateTime: { $gte: now } // Only future meetings
+          }
+        ]
+      })
+      .populate('schedulerId', 'firstName lastName email profilePicture')
+      .sort({ dateTime: 1 })
+      .limit(50);
+
+      // Enhance participants with user data where available
+      const enhancedMeetings = await Promise.all(meetings.map(async (meeting) => {
+        const enhancedParticipants = await Promise.all(meeting.participants.map(async (participant) => {
+          const participantUser = await User.findOne({ email: participant.email })
+            .select('firstName lastName email profilePicture');
+          
+          return {
+            email: participant.email,
+            name: participantUser ? `${participantUser.firstName} ${participantUser.lastName}` : participant.email.split('@')[0],
+            profilePicture: participantUser?.profilePicture || null,
+            status: participant.status
+          };
+        }));
+
+        return {
+          _id: meeting._id,
+          title: meeting.title,
+          description: meeting.description,
+          dateTime: meeting.dateTime,
+          duration: meeting.duration,
+          scheduler: {
+            name: `${meeting.schedulerId.firstName} ${meeting.schedulerId.lastName}`,
+            email: meeting.schedulerId.email,
+            profilePicture: meeting.schedulerId.profilePicture
+          },
+          participants: enhancedParticipants,
+          status: meeting.status,
+          createdAt: meeting.createdAt
+        };
+      }));
+
+      res.json({ 
+        meetings: enhancedMeetings,
+        total: enhancedMeetings.length
+      });
+    } catch (error) {
+      console.error('Get meetings error:', error);
+      res.status(500).json({ error: 'Failed to get meetings' });
+    }
+  });
 };
 
 // Export additional utility functions
 export { 
   User,
+  Meeting,
   createEmailTransport, 
   sendVerificationEmail, 
   validateEmail, 

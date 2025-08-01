@@ -1,0 +1,14 @@
+@@ .. @@
+                 // Reset form after successful submission
+                 setTimeout(() => {
+                     this.resetForm();
++                    // Redirect to dashboard after successful scheduling
++                    setTimeout(() => {
++                        window.location.href = '/dashboard';
++                    }, 2000);
+                 }, 3000);
+             } else {
+                 console.error('❌ Server returned error:', result.message);
+                 this.showToast(result.message || 'Failed to schedule meeting', 'error');
+             }
+         } catch (error) {
